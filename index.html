@@ -29,10 +29,25 @@
         // Link do pliku KML
         const kmlUrl = "https://raw.githubusercontent.com/MarcinCampteam/lista-kempingow/refs/heads/main/map.kml";
 
-        // Wczytanie pliku KML za pomocą Leaflet Omnivore
+        // Wczytanie pliku KML i obsługa popupów
         omnivore.kml(kmlUrl)
             .on('ready', function () {
-                map.fitBounds(this.getBounds()); // Dopasowanie mapy do punktów z KML
+                // Dopasowanie mapy do punktów z KML
+                map.fitBounds(this.getBounds());
+            })
+            .on('layeradd', function (e) {
+                const layer = e.layer;
+
+                // Pobieranie danych z warstwy KML
+                const properties = layer.feature?.properties || {};
+                const name = properties.name || "Brak nazwy";
+                const description = properties.description || "Brak opisu";
+
+                // Dodanie popupu do punktu
+                layer.bindPopup(`
+                    <strong>${name}</strong><br>
+                    ${description}
+                `);
             })
             .on('error', function (e) {
                 console.error('Błąd ładowania pliku KML:', e.error);
