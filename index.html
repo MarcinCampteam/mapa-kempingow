@@ -12,6 +12,24 @@
             width: 100%;
             height: 600px;
         }
+
+        /* Styl popupu */
+        .custom-popup {
+            border: 2px solid #15830d; /* Zielona ramka */
+            padding: 10px;
+            font-family: 'Arial', sans-serif;
+        }
+        .custom-popup strong {
+            font-size: 18px; /* Większa nazwa miejsca */
+            color: #15830d; /* Zielony kolor nazwy */
+        }
+        .custom-popup a {
+            color: #0066cc; /* Niebieskie linki */
+            text-decoration: underline;
+        }
+        .custom-popup a:hover {
+            color: #003399; /* Ciemniejszy niebieski przy najechaniu */
+        }
     </style>
 </head>
 <body>
@@ -43,10 +61,23 @@
                 const name = properties.name || "Brak nazwy";
                 const description = properties.description || "Brak opisu";
 
+                // Funkcja do zamiany tekstu na linki
+                function makeLinksClickable(text) {
+                    return text.replace(
+                        /(https?:\/\/[^\s]+)/g, // Wyszukiwanie linków
+                        '<a href="$1" target="_blank">$1</a>' // Zastąpienie tekstu linkiem
+                    );
+                }
+
+                // Zamiana linków w opisie na klikalne
+                const descriptionWithLinks = makeLinksClickable(description);
+
                 // Dodanie popupu do punktu
                 layer.bindPopup(`
-                    <strong>${name}</strong><br>
-                    ${description}
+                    <div class="custom-popup">
+                        <strong>${name}</strong><br>
+                        ${descriptionWithLinks}
+                    </div>
                 `);
             })
             .on('error', function (e) {
