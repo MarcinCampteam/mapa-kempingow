@@ -54,27 +54,13 @@
         // Link do pliku KML
         const kmlUrl = "https://raw.githubusercontent.com/MarcinCampteam/lista-kempingow/refs/heads/main/map.kml";
 
-        // Funkcja do formatowania tekstu (linki, numery telefonów, usuwanie koordynatów)
-        function formatText(text) {
-            if (!text) return "Brak opisu";
-
-            // Usuwanie koordynatów w nawiasach np. "(51.625175, 19.322321)"
-            text = text.replace(/\s?\(\d{1,3}\.\d+,\s?\d{1,3}\.\d+\)/g, "");
-
-            // Zamiana numerów telefonów na linki tel:
-            text = text.replace(
-                /\b(\+?[0-9]{1,3}[-.\s]?([0-9]{1,4}[-.\s]?){1,5}[0-9]{1,6})\b/g,
-                '<a href="tel:$1">$1</a>'
-            );
-
-            // Zamiana adresów URL na klikalne linki
-            text = text.replace(
-                /(https?:\/\/[^\s]+)/g,
-                '<a href="$1" target="_blank">$1</a>'
-            );
-
-            return text;
-        }
+        // Ikona dla punktów z "Yes_Atrakcje"
+        const attractionsIcon = L.icon({
+            iconUrl: 'https://raw.githubusercontent.com/MarcinCampteam/mapa-kempingow/main/icons/Ikona_Atrakcje.png', // URL do ikony
+            iconSize: [32, 32], // Rozmiar ikony
+            iconAnchor: [16, 32], // Punkt zaczepienia ikony
+            popupAnchor: [0, -32] // Punkt zaczepienia popupu
+        });
 
         // Wczytanie pliku KML i obsługa markerów
         omnivore.kml(kmlUrl)
@@ -86,7 +72,10 @@
                     // Usuwanie koordynatów w nazwie
                     name = name.replace(/\s?\(\d{1,3}\.\d+,\s?\d{1,3}\.\d+\)/g, "");
 
-                    const description = formatText(properties.description);
+                    const description = properties.description || "Brak opisu";
+
+                    // Sprawdzenie, czy dane zawierają "Yes_Atrakcje" w opisie
+                    const hasYesAtrakcje = description.includes("Yes_Atrakcje");
 
                     // Tworzenie popupu
                     const popupContent = `
@@ -96,8 +85,8 @@
                         </div>
                     `;
 
-                    // Dodanie do grupy klastrów
-                    const marker = L.marker(layer.getLatLng());
+                    // Dodanie do grupy klastrów z odpowiednią ikoną
+                    const marker = L.marker(layer.getLatLng(), { icon: hasYesAtrakcje ? attractionsIcon : undefined });
                     marker.bindPopup(popupContent);
                     markerCluster.addLayer(marker);
                 });
