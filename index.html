@@ -54,6 +54,25 @@
         // Link do pliku KML
         const kmlUrl = "https://raw.githubusercontent.com/MarcinCampteam/lista-kempingow/refs/heads/main/map.kml";
 
+        // Ikony
+        const redIcon = L.icon({
+            iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-red.png',
+            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+            shadowSize: [41, 41]
+        });
+
+        const defaultIcon = L.icon({
+            iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+            shadowSize: [41, 41]
+        });
+
         // Funkcja do formatowania tekstu (linki, numery telefonów, usuwanie koordynatów)
         function formatText(text) {
             if (!text) return "Brak opisu";
@@ -88,6 +107,9 @@
 
                     const description = formatText(properties.description);
 
+                    // Sprawdzenie, czy dane zawierają "Yes_Atrakcje"
+                    const hasYesAtrakcje = layer.feature?.properties?.Atrakcje === "Yes_Atrakcje";
+
                     // Tworzenie popupu
                     const popupContent = `
                         <div class="custom-popup">
@@ -96,8 +118,11 @@
                         </div>
                     `;
 
+                    // Wybór ikony
+                    const icon = hasYesAtrakcje ? redIcon : defaultIcon;
+
                     // Dodanie do grupy klastrów
-                    const marker = L.marker(layer.getLatLng());
+                    const marker = L.marker(layer.getLatLng(), { icon: icon });
                     marker.bindPopup(popupContent);
                     markerCluster.addLayer(marker);
                 });
