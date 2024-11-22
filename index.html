@@ -54,12 +54,19 @@
         // Link do pliku KML
         const kmlUrl = "https://raw.githubusercontent.com/MarcinCampteam/lista-kempingow/refs/heads/main/map.kml";
 
-        // Ikona dla punktów z "Yes_Atrakcje"
+        // Ikony
         const attractionsIcon = L.icon({
             iconUrl: 'https://raw.githubusercontent.com/MarcinCampteam/mapa-kempingow/main/icons/Ikona_Atrakcje.png', // URL do ikony
             iconSize: [32, 32], // Rozmiar ikony
             iconAnchor: [16, 32], // Punkt zaczepienia ikony
             popupAnchor: [0, -32] // Punkt zaczepienia popupu
+        });
+
+        const defaultIcon = L.icon({
+            iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png', // Domyślna ikona Leaflet
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34]
         });
 
         // Funkcja do formatowania tekstu (linki, numery telefonów, usuwanie koordynatów)
@@ -96,8 +103,8 @@
 
                     const description = formatText(properties.description);
 
-                    // Sprawdzenie, czy dane zawierają "Yes_Atrakcje"
-                    const hasYesAtrakcje = properties.Atrakcje === "Yes_Atrakcje";
+                    // Sprawdzenie, czy dane zawierają "Yes_Atrakcje" w opisie
+                    const hasYesAtrakcje = properties.description?.includes("Yes_Atrakcje");
 
                     // Tworzenie popupu
                     const popupContent = `
@@ -108,7 +115,7 @@
                     `;
 
                     // Dodanie do grupy klastrów z odpowiednią ikoną
-                    const marker = L.marker(layer.getLatLng(), { icon: hasYesAtrakcje ? attractionsIcon : undefined });
+                    const marker = L.marker(layer.getLatLng(), { icon: hasYesAtrakcje ? attractionsIcon : defaultIcon });
                     marker.bindPopup(popupContent);
                     markerCluster.addLayer(marker);
                 });
