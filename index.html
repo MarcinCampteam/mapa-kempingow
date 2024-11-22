@@ -83,16 +83,17 @@
 
                     let description = properties.description || "Brak opisu";
 
-                    // Szukanie danych "Yes_Atrakcje" w strukturze ExtendedData
-                    const extendedData = layer.feature?.properties?.ExtendedData || {};
+                    // Szukanie "Yes_Atrakcje" w ExtendedData
                     let hasYesAtrakcje = false;
 
-                    if (extendedData) {
-                        Object.entries(extendedData).forEach(([key, value]) => {
-                            if (key === "Atrakcje" && value === "Yes_Atrakcje") {
+                    if (properties.ExtendedData) {
+                        const extendedData = properties.ExtendedData;
+                        for (const key in extendedData) {
+                            if (key === "Atrakcje" && extendedData[key] === "Yes_Atrakcje") {
                                 hasYesAtrakcje = true;
+                                break;
                             }
-                        });
+                        }
                     }
 
                     // Tworzenie popupu
