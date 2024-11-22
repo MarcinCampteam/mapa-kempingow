@@ -83,21 +83,11 @@
 
                     let description = properties.description || "Brak opisu";
 
-                    // Szukanie "Yes_Atrakcje" w danych
-                    const extendedData = layer.feature?.properties?.ExtendedData;
-                    let hasYesAtrakcje = false;
-
-                    if (extendedData) {
-                        for (const dataKey in extendedData) {
-                            if (
-                                dataKey === "Atrakcje" &&
-                                extendedData[dataKey] === "Yes_Atrakcje"
-                            ) {
-                                hasYesAtrakcje = true;
-                                break;
-                            }
-                        }
-                    }
+                    // Szukanie w ExtendedData
+                    const extendedData = layer.feature?.properties?.ExtendedData || {};
+                    const hasYesAtrakcje = Object.keys(extendedData).some(key => 
+                        key === "Atrakcje" && extendedData[key] === "Yes_Atrakcje"
+                    );
 
                     // Tworzenie popupu
                     const popupContent = `
