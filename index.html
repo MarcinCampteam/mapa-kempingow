@@ -51,8 +51,8 @@
         const markerCluster = L.markerClusterGroup();
         map.addLayer(markerCluster);
 
-        // Ikona dla punktów z "Yes_Atrakcje"
-        const attractionsIcon = L.icon({
+        // Ikona dla punktów z "Yes_Kempingi"
+        const campingIcon = L.icon({
             iconUrl: 'https://raw.githubusercontent.com/MarcinCampteam/mapa-kempingow/main/icons/Ikona_Atrakcje.png',
             iconSize: [32, 32], // Rozmiar ikony
             iconAnchor: [16, 32], // Punkt zaczepienia ikony
@@ -83,8 +83,21 @@
 
                     const description = properties.description || "Brak opisu";
 
-                    // Sprawdzenie, czy dane zawierają "Yes_Atrakcje" w opisie
-                    const hasYesAtrakcje = description.includes("Yes_Atrakcje");
+                    // Szukanie w ExtendedData -> Data -> Value
+                    const extendedData = layer.feature?.properties?.ExtendedData;
+                    let hasYesKempingi = false;
+
+                    if (extendedData) {
+                        for (const dataKey in extendedData) {
+                            if (
+                                dataKey === "Kempingi" &&
+                                extendedData[dataKey] === "Yes_Kempingi"
+                            ) {
+                                hasYesKempingi = true;
+                                break;
+                            }
+                        }
+                    }
 
                     // Tworzenie popupu
                     const popupContent = `
@@ -96,7 +109,7 @@
 
                     // Dodanie markera z odpowiednią ikoną
                     const marker = L.marker(layer.getLatLng(), {
-                        icon: hasYesAtrakcje ? attractionsIcon : defaultIcon
+                        icon: hasYesKempingi ? campingIcon : defaultIcon
                     });
                     marker.bindPopup(popupContent);
                     markerCluster.addLayer(marker);
