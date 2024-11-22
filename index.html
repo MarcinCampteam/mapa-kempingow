@@ -101,16 +101,17 @@
                     // Usuwanie koordynatów w nazwie
                     name = name.replace(/\s?\(\d{1,3}\.\d+,\s?\d{1,3}\.\d+\)/g, "");
 
-                    const description = formatText(properties.description);
+                    const description = properties.description || "Brak opisu";
+                    const formattedDescription = formatText(description);
 
                     // Sprawdzenie, czy dane zawierają "Yes_Atrakcje" w opisie
-                    const hasYesAtrakcje = properties.description?.includes("Yes_Atrakcje");
+                    const hasYesAtrakcje = description.includes("Yes_Atrakcje");
 
                     // Tworzenie popupu
                     const popupContent = `
                         <div class="custom-popup">
                             <strong>${name}</strong><br>
-                            ${description}
+                            ${formattedDescription}
                         </div>
                     `;
 
