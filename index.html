@@ -70,20 +70,39 @@
             border: 2px solid #15830d;
             padding: 10px;
             font-family: 'Arial', sans-serif;
+            font-size: 14px;
         }
 
         .custom-popup strong {
-            font-size: 18px;
+            font-size: 16px;
             color: #15830d;
+            display: block;
+            margin-bottom: 10px;
         }
 
         .custom-popup a {
             color: #0066cc;
             text-decoration: underline;
+            display: block;
+            margin-bottom: 5px;
         }
 
         .custom-popup a:hover {
             color: #003399;
+        }
+
+        .custom-popup button {
+            margin-top: 10px;
+            padding: 5px 10px;
+            background: #15830d;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .custom-popup button:hover {
+            background: #0e5a08;
         }
     </style>
 </head>
@@ -118,23 +137,21 @@
         // Link do pliku KML
         const kmlUrl = "https://raw.githubusercontent.com/MarcinCampteam/lista-kempingow/refs/heads/main/map.kml";
 
-        // Funkcja do formatowania tekstu (linki, numery telefonów)
-        function formatText(text) {
-            if (!text) return "Brak opisu";
+        // Funkcja do tworzenia linku do Google Maps
+        function generateGoogleMapsLink(lat, lng) {
+            return `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+        }
 
-            // Zamiana numerów telefonów na linki tel:
-            text = text.replace(
-                /\b(\+?[0-9]{1,3}[-.\s]?([0-9]{1,4}[-.\s]?){1,5}[0-9]{1,6})\b/g,
-                '<a href="tel:$1">$1</a>'
-            );
-
-            // Zamiana adresów URL na klikalne linki
-            text = text.replace(
-                /(https?:\/\/[^\s]+)/g,
-                '<a href="$1" target="_blank">$1</a>'
-            );
-
-            return text;
+        // Funkcja do formatowania popupu
+        function createPopupContent(name, phone, website, lat, lng) {
+            let content = `<strong>${name}</strong>`;
+            if (phone) content += `<a href="tel:${phone}">📞 ${phone}</a>`;
+            if (website) content += `<a href="${website}" target="_blank">🌐 Strona WWW</a>`;
+            content += `
+                <button onclick="window.open('${generateGoogleMapsLink(lat, lng)}', '_blank')">Wyznacz trasę</button>
+                <button onclick="window.open('https://www.campteam.pl/dodaj', '_blank')">Aktualizuj dane</button>
+            `;
+            return content;
         }
 
         // Wczytanie pliku KML i obsługa markerów
@@ -142,17 +159,14 @@
             .on('ready', function () {
                 this.eachLayer(function (layer) {
                     const properties = layer.feature?.properties || {};
-                    let name = properties.name || "Brak nazwy";
-
-                    const description = formatText(properties.description);
+                    const name = properties.name || "Brak nazwy";
+                    const phone = properties.phone || null;
+                    const website = properties.website || null;
+                    const lat = layer.getLatLng().lat;
+                    const lng = layer.getLatLng().lng;
 
                     // Tworzenie popupu
-                    const popupContent = `
-                        <div class="custom-popup">
-                            <strong>${name}</strong><br>
-                            ${description}
-                        </div>
-                    `;
+                    const popupContent = createPopupContent(name, phone, website, lat, lng);
 
                     // Dodanie markera do grupy i tablicy
                     const marker = L.marker(layer.getLatLng());
