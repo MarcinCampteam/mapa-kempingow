@@ -49,7 +49,7 @@
             kempingi: L.markerClusterGroup()
         };
 
-        // Link do pliku KML
+        // Link do zewnętrznego pliku KML
         const kmlUrl = "https://raw.githubusercontent.com/MarcinCampteam/lista-kempingow/refs/heads/main/map.kml";
 
         // Funkcja do formatowania tekstu (linki, numery telefonów, usuwanie koordynatów)
@@ -67,7 +67,7 @@
             return text;
         }
 
-        // Wczytanie pliku KML
+        // Wczytanie pliku KML z zewnętrznego repozytorium
         omnivore.kml(kmlUrl)
             .on('ready', function () {
                 this.eachLayer(function (layer) {
