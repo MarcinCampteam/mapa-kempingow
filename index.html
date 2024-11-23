@@ -172,18 +172,19 @@
             .on('ready', function () {
                 this.eachLayer(function (layer) {
                     const properties = layer.feature?.properties || {};
+                    console.log('Dane właściwości:', properties); // Debug: sprawdź dane KML w konsoli
+
                     let name = properties.name || "Brak nazwy";
 
-                    // Typy obiektów na podstawie wartości w danych
+                    // Typy obiektów na podstawie danych z KML
                     const type = {
-                        camping: properties.Yes_Kemping === "Yes_Kemping",
-                        tents: properties.Yes_Pola_Namiotowe === "Yes_Pola_Namiotowe",
-                        attractions: properties.Yes_Atrakcje === "Yes_Atrakcje",
-                        parking: properties.Yes_Parkingi === "Yes_Parkingi"
+                        camping: properties["Yes_Kemping"] === "Yes_Kemping",
+                        tents: properties["Yes_Pola_Namiotowe"] === "Yes_Pola_Namiotowe",
+                        attractions: properties["Yes_Atrakcje"] === "Yes_Atrakcje",
+                        parking: properties["Yes_Parkingi"] === "Yes_Parkingi"
                     };
 
-                    name = name.replace(/\s?\(\d{1,3}\.\d+,\s?\d{1,3}\.\d+\)/g, "");
-                    const description = formatText(properties.description || "");
+                    const description = properties.description || "Brak opisu";
 
                     const popupContent = `
                         <div class="custom-popup">
@@ -205,11 +206,6 @@
             });
 
         // Rozwijane filtry
-        filterIcon.addEventListener("click", function () {
-            filterOptions.style.display = filterOptions.style.display === "block" ? "none" : "block";
-        });
-
-        // Obsługa wyboru filtrów
         const filterCheckboxes = document.querySelectorAll("#filter-options input[type='checkbox']");
         filterCheckboxes.forEach(checkbox => {
             checkbox.addEventListener("change", function () {
@@ -220,15 +216,19 @@
                 markerCluster.clearLayers();
 
                 allMarkers.forEach(({ marker, type }) => {
-                    // Sprawdzamy, czy marker pasuje do wybranych filtrów
                     if (
-                        selectedFilters.length === 0 ||
+                        selectedFilters.length === 0 || 
                         selectedFilters.some(filter => type[filter])
                     ) {
                         markerCluster.addLayer(marker);
                     }
                 });
             });
+        });
+
+        document.getElementById("filter-icon").addEventListener("click", function () {
+            const filterOptions = document.getElementById("filter-options");
+            filterOptions.style.display = filterOptions.style.display === "block" ? "none" : "block";
         });
     </script>
 </body>
