@@ -21,19 +21,36 @@
             top: 10px;
             left: 10px;
             z-index: 1000;
-            background: white;
+            background: #eaf4ea;
             padding: 10px;
-            border-radius: 5px;
+            border-radius: 10px;
+            border: 2px solid #15830d;
             box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
         }
 
         #search-box {
             width: 200px;
             padding: 5px;
+            border: 1px solid #15830d;
+            border-radius: 5px;
         }
 
-        #search-button {
-            padding: 5px 10px;
+        #suggestions {
+            background: white;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-top: 5px;
+            max-height: 100px;
+            overflow-y: auto;
+        }
+
+        #suggestions div {
+            padding: 5px;
+            cursor: pointer;
+        }
+
+        #suggestions div:hover {
+            background: #d4edda;
         }
 
         /* Styl popupu */
@@ -61,7 +78,7 @@
 <body>
     <div id="search-container">
         <input type="text" id="search-box" placeholder="Wpisz nazwę miejsca...">
-        <button id="search-button">Szukaj</button>
+        <div id="suggestions"></div>
     </div>
     <div id="map"></div>
 
@@ -142,19 +159,25 @@
 
         // Obsługa wyszukiwania
         const searchBox = document.getElementById('search-box');
-        const searchButton = document.getElementById('search-button');
+        const suggestions = document.getElementById('suggestions');
 
-        searchButton.addEventListener('click', () => {
+        searchBox.addEventListener('input', () => {
             const query = searchBox.value.toLowerCase().trim();
-            if (!query) return;
+            suggestions.innerHTML = ''; // Wyczyść poprzednie sugestie
 
-            // Wyszukiwanie markera
-            const result = markers.find(item => item.name.includes(query));
-            if (result) {
-                map.setView(result.marker.getLatLng(), 14); // Przybliżenie do markera
-                result.marker.openPopup(); // Otwórz popup
-            } else {
-                alert('Nie znaleziono miejsca o podanej nazwie.');
+            if (query) {
+                // Filtruj miejsca pasujące do wpisanej frazy
+                const matches = markers.filter(item => item.name.includes(query));
+                matches.forEach(match => {
+                    const suggestion = document.createElement('div');
+                    suggestion.textContent = match.name;
+                    suggestion.addEventListener('click', () => {
+                        map.setView(match.marker.getLatLng(), 14); // Przybliżenie do markera
+                        match.marker.openPopup(); // Otwórz popup
+                        suggestions.innerHTML = ''; // Wyczyść sugestie
+                    });
+                    suggestions.appendChild(suggestion);
+                });
             }
         });
     </script>
