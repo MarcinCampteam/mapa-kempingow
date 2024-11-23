@@ -130,7 +130,7 @@
         <div id="filter-icon" class="filter-icon">⚙</div>
         <div id="filter-options" class="filter-options">
             <label>
-                <input type="checkbox" id="filter-campings"> Kempingi
+                <input type="checkbox" id="filter-camping"> Kempingi
             </label>
             <label>
                 <input type="checkbox" id="filter-tents"> Pola namiotowe
@@ -168,66 +168,41 @@
             return text;
         }
 
-       omnivore.kml(kmlUrl)
-    .on('ready', function () {
-        this.eachLayer(function (layer) {
-            const properties = layer.feature?.properties || {};
-            let name = properties.name || "Brak nazwy";
-            
-            // Typy obiektów na podstawie wartości w danych
-            const type = {
-                camping: properties.Yes_Kemping === "Yes_Kemping",
-                tents: properties.Yes_Pola_Namiotowe === "Yes_Pola_Namiotowe",
-                attractions: properties.Yes_Atrakcje === "Yes_Atrakcje",
-                parking: properties.Yes_Parkingi === "Yes_Parkingi"
-            };
+        omnivore.kml(kmlUrl)
+            .on('ready', function () {
+                this.eachLayer(function (layer) {
+                    const properties = layer.feature?.properties || {};
+                    let name = properties.name || "Brak nazwy";
 
-            // Usuwanie koordynatów z nazwy (jeśli występują)
-            name = name.replace(/\s?\(\d{1,3}\.\d+,\s?\d{1,3}\.\d+\)/g, "");
+                    // Typy obiektów na podstawie wartości w danych
+                    const type = {
+                        camping: properties.Yes_Kemping === "Yes_Kemping",
+                        tents: properties.Yes_Pola_Namiotowe === "Yes_Pola_Namiotowe",
+                        attractions: properties.Yes_Atrakcje === "Yes_Atrakcje",
+                        parking: properties.Yes_Parkingi === "Yes_Parkingi"
+                    };
 
-            const description = formatText(properties.description || "");
+                    name = name.replace(/\s?\(\d{1,3}\.\d+,\s?\d{1,3}\.\d+\)/g, "");
+                    const description = formatText(properties.description || "");
 
-            const popupContent = `
-                <div class="custom-popup">
-                    <strong>${name}</strong><br>
-                    ${description}
-                </div>
-            `;
+                    const popupContent = `
+                        <div class="custom-popup">
+                            <strong>${name}</strong><br>
+                            ${description}
+                        </div>
+                    `;
 
-            const marker = L.marker(layer.getLatLng());
-            marker.bindPopup(popupContent);
-            markerCluster.addLayer(marker);
-            allMarkers.push({ marker, name, type });
-        });
+                    const marker = L.marker(layer.getLatLng());
+                    marker.bindPopup(popupContent);
+                    markerCluster.addLayer(marker);
+                    allMarkers.push({ marker, name, type });
+                });
 
-        map.fitBounds(markerCluster.getBounds());
-    })
-    .on('error', function (e) {
-        console.error('Błąd ładowania pliku KML:', e.error);
-    });
-
-// Obsługa wyboru filtrów
-const filterCheckboxes = document.querySelectorAll("#filter-options input[type='checkbox']");
-filterCheckboxes.forEach(checkbox => {
-    checkbox.addEventListener("change", function () {
-        const selectedFilters = Array.from(filterCheckboxes)
-            .filter(checkbox => checkbox.checked)
-            .map(checkbox => checkbox.id.replace("filter-", ""));
-
-        markerCluster.clearLayers();
-
-        allMarkers.forEach(({ marker, type }) => {
-            // Sprawdzamy, czy marker pasuje do wybranych filtrów
-            if (
-                selectedFilters.length === 0 ||
-                selectedFilters.some(filter => type[filter])
-            ) {
-                markerCluster.addLayer(marker);
-            }
-        });
-    });
-});
-
+                map.fitBounds(markerCluster.getBounds());
+            })
+            .on('error', function (e) {
+                console.error('Błąd ładowania pliku KML:', e.error);
+            });
 
         // Rozwijane filtry
         filterIcon.addEventListener("click", function () {
@@ -245,6 +220,7 @@ filterCheckboxes.forEach(checkbox => {
                 markerCluster.clearLayers();
 
                 allMarkers.forEach(({ marker, type }) => {
+                    // Sprawdzamy, czy marker pasuje do wybranych filtrów
                     if (
                         selectedFilters.length === 0 ||
                         selectedFilters.some(filter => type[filter])
