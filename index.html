@@ -26,7 +26,7 @@
             border-radius: 10px;
             border: 2px solid #15830d;
             box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
-            width: 50%; /* Szerokość wyszukiwarki zajmuje 50% strony */
+            width: 30%; /* Szerokość wyszukiwarki zajmuje 30% strony */
         }
 
         #search-box {
@@ -109,12 +109,9 @@
         // Link do pliku KML
         const kmlUrl = "https://raw.githubusercontent.com/MarcinCampteam/lista-kempingow/refs/heads/main/map.kml";
 
-        // Funkcja do formatowania tekstu (linki, numery telefonów, usuwanie koordynatów)
+        // Funkcja do formatowania tekstu (linki, numery telefonów)
         function formatText(text) {
             if (!text) return "Brak opisu";
-
-            // Usuwanie koordynatów w nawiasach np. "(51.625175, 19.322321)"
-            text = text.replace(/\s?\((\d{1,3}\.\d+),\s?(\d{1,3}\.\d+)\)/g, (_, lat, lng) => `(${lat}, ${lng})`);
 
             // Zamiana numerów telefonów na linki tel:
             text = text.replace(
@@ -137,9 +134,6 @@
                 this.eachLayer(function (layer) {
                     const properties = layer.feature?.properties || {};
                     let name = properties.name || "Brak nazwy";
-
-                    // Usuwanie koordynatów w nazwie
-                    name = name.replace(/\s?\(\d{1,3}\.\d+,\s?\d{1,3}\.\d+\)/g, "");
 
                     const description = formatText(properties.description);
 
@@ -170,20 +164,23 @@
         const suggestions = document.getElementById('suggestions');
 
         searchBox.addEventListener('input', () => {
-            const query = searchBox.value.trim();
+            const query = searchBox.value.trim().toLowerCase();
             suggestions.innerHTML = ''; // Wyczyść poprzednie sugestie
 
-            // Zawsze wyświetlaj wszystkie punkty w sugestiach
-            markers.forEach(item => {
-                const suggestion = document.createElement('div');
-                suggestion.textContent = item.name;
-                suggestion.addEventListener('click', () => {
-                    map.setView(item.marker.getLatLng(), 14); // Przybliżenie do markera
-                    item.marker.openPopup(); // Otwórz popup
-                    suggestions.innerHTML = ''; // Wyczyść sugestie
+            if (query) {
+                // Filtruj miejsca pasujące do wpisanej frazy
+                const matches = markers.filter(item => item.name.toLowerCase().includes(query));
+                matches.forEach(match => {
+                    const suggestion = document.createElement('div');
+                    suggestion.textContent = match.name;
+                    suggestion.addEventListener('click', () => {
+                        map.setView(match.marker.getLatLng(), 14); // Przybliżenie do markera
+                        match.marker.openPopup(); // Otwórz popup
+                        suggestions.innerHTML = ''; // Wyczyść sugestie
+                    });
+                    suggestions.appendChild(suggestion);
                 });
-                suggestions.appendChild(suggestion);
-            });
+            }
         });
     </script>
 </body>
