@@ -27,10 +27,13 @@
             border: 2px solid #15830d;
             box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
             width: 30%; /* Szerokość wyszukiwarki zajmuje 30% strony */
+            display: flex;
+            flex-direction: column;
+            align-items: center; /* Wyrównanie na środku kontenera */
         }
 
         #search-box {
-            width: 100%;
+            width: 90%; /* Dopasowanie do środka zielonej ramki */
             padding: 10px;
             border: 1px solid #15830d;
             border-radius: 5px;
@@ -50,6 +53,7 @@
             max-height: 200px;
             overflow-y: auto;
             font-size: 14px;
+            width: 90%;
         }
 
         #suggestions div {
@@ -59,6 +63,11 @@
 
         #suggestions div:hover {
             background: #d4edda;
+        }
+
+        #locations-dropdown {
+            margin-top: 15px;
+            width: 90%; /* Dopasowanie do środka zielonej ramki */
         }
 
         /* Styl popupu */
@@ -87,6 +96,7 @@
     <div id="search-container">
         <input type="text" id="search-box" placeholder="Szukaj">
         <div id="suggestions"></div>
+        <select id="locations-dropdown" size="5"></select>
     </div>
     <div id="map"></div>
 
@@ -105,6 +115,11 @@
 
         // Tablica markerów dla wyszukiwania
         const markers = [];
+
+        // Funkcja usuwania polskich znaków
+        function removeAccents(str) {
+            return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        }
 
         // Link do pliku KML
         const kmlUrl = "https://raw.githubusercontent.com/MarcinCampteam/lista-kempingow/refs/heads/main/map.kml";
@@ -131,7 +146,7 @@
         // Wczytanie pliku KML i obsługa markerów
         omnivore.kml(kmlUrl)
             .on('ready', function () {
-                this.eachLayer(function (layer) {
+                this.eachLayer(function (layer, index) {
                     const properties = layer.feature?.properties || {};
                     let name = properties.name || "Brak nazwy";
 
@@ -150,6 +165,12 @@
                     marker.bindPopup(popupContent);
                     markerCluster.addLayer(marker);
                     markers.push({ marker, name });
+
+                    // Dodanie lokalizacji do rozwijanej listy
+                    const option = document.createElement("option");
+                    option.value = index;
+                    option.textContent = `${index + 1}. ${name}`;
+                    document.getElementById("locations-dropdown").appendChild(option);
                 });
 
                 // Dopasowanie widoku do punktów
@@ -164,12 +185,14 @@
         const suggestions = document.getElementById('suggestions');
 
         searchBox.addEventListener('input', () => {
-            const query = searchBox.value.trim().toLowerCase();
+            const query = removeAccents(searchBox.value.toLowerCase().trim());
             suggestions.innerHTML = ''; // Wyczyść poprzednie sugestie
 
             if (query) {
-                // Filtruj miejsca pasujące do wpisanej frazy
-                const matches = markers.filter(item => item.name.toLowerCase().includes(query));
+                // Filtruj miejsca pasujące do wpisanej frazy (bez uwzględniania polskich znaków)
+                const matches = markers.filter(item =>
+                    removeAccents(item.name.toLowerCase()).includes(query)
+                );
                 matches.forEach(match => {
                     const suggestion = document.createElement('div');
                     suggestion.textContent = match.name;
@@ -180,6 +203,16 @@
                     });
                     suggestions.appendChild(suggestion);
                 });
+            }
+        });
+
+        // Obsługa wyboru z rozwijanej listy
+        document.getElementById("locations-dropdown").addEventListener("change", (event) => {
+            const index = event.target.value;
+            if (markers[index]) {
+                const selectedMarker = markers[index];
+                map.setView(selectedMarker.marker.getLatLng(), 14); // Przybliżenie do markera
+                selectedMarker.marker.openPopup(); // Otwórz popup
             }
         });
     </script>
