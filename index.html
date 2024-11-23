@@ -9,143 +9,9 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.Default.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-omnivore/0.3.4/leaflet-omnivore.min.js"></script>
-    <style>
-        #map {
-            width: 100%;
-            height: 600px;
-        }
+    <script type="module">
+        import { processKML } from './dataProcessor.js';
 
-        /* Styl popupu */
-        .custom-popup {
-            border: 2px solid #15830d;
-            padding: 10px;
-            font-family: 'Arial', sans-serif;
-        }
-        .custom-popup strong {
-            font-size: 18px;
-            color: #15830d;
-        }
-        .custom-popup a {
-            color: #0066cc;
-            text-decoration: underline;
-        }
-        .custom-popup a:hover {
-            color: #003399;
-        }
-
-        /* Styl wyszukiwarki */
-        .search-box {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            z-index: 1000;
-            background: #ffffff;
-            border: 2px solid #15830d;
-            border-radius: 15px;
-            padding: 10px;
-            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-            width: 50%;
-        }
-
-        .search-input {
-            width: calc(100% - 20px); /* Dopasowanie do szerokości ramki */
-            padding: 8px;
-            font-size: 16px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            outline: none;
-            margin: 0;
-        }
-
-        .suggestions {
-            background: #fff;
-            border: 1px solid #ccc;
-            border-top: none;
-            max-height: 200px;
-            overflow-y: auto;
-            border-radius: 0 0 5px 5px;
-        }
-
-        .suggestion {
-            padding: 8px;
-            cursor: pointer;
-        }
-
-        .suggestion:hover {
-            background: #f0f0f0;
-        }
-
-        /* Styl filtrów */
-        .filter-box {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            z-index: 1000;
-        }
-
-        .filter-icon {
-            width: 40px;
-            height: 40px;
-            background: #15830d;
-            color: white;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            border-radius: 50%;
-            cursor: pointer;
-            font-size: 20px;
-            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-        }
-
-        .filter-options {
-            display: none;
-            position: absolute;
-            top: 50px;
-            right: 0;
-            background: white;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            padding: 10px;
-            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-        }
-
-        .filter-options label {
-            display: block;
-            margin-bottom: 10px;
-        }
-    </style>
-</head>
-<body>
-    <div id="map"></div>
-
-    <!-- Wyszukiwarka -->
-    <div class="search-box">
-        <input type="text" id="search-input" class="search-input" placeholder="Wyszukaj miejsce na mapie...">
-        <div id="suggestions" class="suggestions"></div>
-    </div>
-
-    <!-- Filtry -->
-    <div class="filter-box">
-        <div id="filter-icon" class="filter-icon">⚙</div>
-        <div id="filter-options" class="filter-options">
-            <label>
-                <input type="checkbox" id="filter-camping"> Kempingi
-            </label>
-            <label>
-                <input type="checkbox" id="filter-tents"> Pola namiotowe
-            </label>
-            <label>
-                <input type="checkbox" id="filter-attractions"> Atrakcje
-            </label>
-            <label>
-                <input type="checkbox" id="filter-parking"> Parkingi
-            </label>
-        </div>
-    </div>
-
-    <!-- Skrypt obsługi mapy -->
-    <script>
         const map = L.map('map', { preferCanvas: true }).setView([52.237049, 21.017532], 6);
 
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -157,80 +23,35 @@
 
         const kmlUrl = "https://raw.githubusercontent.com/MarcinCampteam/lista-kempingow/refs/heads/main/map.kml";
 
-        const allMarkers = []; // Przechowuje wszystkie markery
-        const searchInput = document.getElementById("search-input");
-        const suggestions = document.getElementById("suggestions");
-        const filterIcon = document.getElementById("filter-icon");
-        const filterOptions = document.getElementById("filter-options");
+        // Wczytanie i podział danych
+        processKML(kmlUrl).then(categories => {
+            console.log("Kategorie:", categories); // Debug - sprawdzamy dane w konsoli
 
-        function formatText(text) {
-            if (!text) return "Brak opisu";
-            text = text.replace(/\s?\(\d{1,3}\.\d+,\s?\d{1,3}\.\d+\)/g, "");
-            return text;
-        }
-
-        omnivore.kml(kmlUrl)
-            .on('ready', function () {
-                this.eachLayer(function (layer) {
-                    const properties = layer.feature?.properties || {};
-                    console.log('Dane właściwości:', properties); // Debug: sprawdź dane KML w konsoli
-
-                    let name = properties.name || "Brak nazwy";
-
-                    // Typy obiektów na podstawie danych z KML
-                    const type = {
-                        camping: properties["Yes_Kemping"] === "Yes_Kemping",
-                        tents: properties["Yes_Pola_Namiotowe"] === "Yes_Pola_Namiotowe",
-                        attractions: properties["Yes_Atrakcje"] === "Yes_Atrakcje",
-                        parking: properties["Yes_Parkingi"] === "Yes_Parkingi"
-                    };
-
-                    const description = properties.description || "Brak opisu";
-
-                    const popupContent = `
-                        <div class="custom-popup">
-                            <strong>${name}</strong><br>
-                            ${description}
-                        </div>
-                    `;
-
-                    const marker = L.marker(layer.getLatLng());
-                    marker.bindPopup(popupContent);
-                    markerCluster.addLayer(marker);
-                    allMarkers.push({ marker, name, type });
-                });
-
-                map.fitBounds(markerCluster.getBounds());
-            })
-            .on('error', function (e) {
-                console.error('Błąd ładowania pliku KML:', e.error);
+            // Dodajemy wszystkie punkty do markerCluster
+            Object.values(categories).flat().forEach(location => {
+                const marker = L.marker(location.latLng).bindPopup(`
+                    <div class="custom-popup">
+                        <strong>${location.name}</strong><br>
+                        ${location.description}
+                    </div>
+                `);
+                markerCluster.addLayer(marker);
             });
 
-        // Rozwijane filtry
-        const filterCheckboxes = document.querySelectorAll("#filter-options input[type='checkbox']");
-        filterCheckboxes.forEach(checkbox => {
-            checkbox.addEventListener("change", function () {
-                const selectedFilters = Array.from(filterCheckboxes)
-                    .filter(checkbox => checkbox.checked)
-                    .map(checkbox => checkbox.id.replace("filter-", ""));
-
-                markerCluster.clearLayers();
-
-                allMarkers.forEach(({ marker, type }) => {
-                    if (
-                        selectedFilters.length === 0 || 
-                        selectedFilters.some(filter => type[filter])
-                    ) {
-                        markerCluster.addLayer(marker);
-                    }
-                });
-            });
-        });
-
-        document.getElementById("filter-icon").addEventListener("click", function () {
-            const filterOptions = document.getElementById("filter-options");
-            filterOptions.style.display = filterOptions.style.display === "block" ? "none" : "block";
+            // Dopasowanie widoku mapy do wszystkich punktów
+            map.fitBounds(markerCluster.getBounds());
+        }).catch(error => {
+            console.error(error);
         });
     </script>
+    <style>
+        #map {
+            width: 100%;
+            height: 600px;
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
 </body>
 </html>
