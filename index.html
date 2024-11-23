@@ -65,11 +65,6 @@
             background: #d4edda;
         }
 
-        #locations-dropdown {
-            margin-top: 15px;
-            width: 90%; /* Dopasowanie do środka zielonej ramki */
-        }
-
         /* Styl popupu */
         .custom-popup {
             border: 2px solid #15830d;
@@ -96,7 +91,6 @@
     <div id="search-container">
         <input type="text" id="search-box" placeholder="Szukaj">
         <div id="suggestions"></div>
-        <select id="locations-dropdown" size="5"></select>
     </div>
     <div id="map"></div>
 
@@ -146,7 +140,7 @@
         // Wczytanie pliku KML i obsługa markerów
         omnivore.kml(kmlUrl)
             .on('ready', function () {
-                this.eachLayer(function (layer, index) {
+                this.eachLayer(function (layer) {
                     const properties = layer.feature?.properties || {};
                     let name = properties.name || "Brak nazwy";
 
@@ -165,12 +159,6 @@
                     marker.bindPopup(popupContent);
                     markerCluster.addLayer(marker);
                     markers.push({ marker, name });
-
-                    // Dodanie lokalizacji do rozwijanej listy
-                    const option = document.createElement("option");
-                    option.value = index;
-                    option.textContent = `${index + 1}. ${name}`;
-                    document.getElementById("locations-dropdown").appendChild(option);
                 });
 
                 // Dopasowanie widoku do punktów
@@ -203,16 +191,6 @@
                     });
                     suggestions.appendChild(suggestion);
                 });
-            }
-        });
-
-        // Obsługa wyboru z rozwijanej listy
-        document.getElementById("locations-dropdown").addEventListener("change", (event) => {
-            const index = event.target.value;
-            if (markers[index]) {
-                const selectedMarker = markers[index];
-                map.setView(selectedMarker.marker.getLatLng(), 14); // Przybliżenie do markera
-                selectedMarker.marker.openPopup(); // Otwórz popup
             }
         });
     </script>
