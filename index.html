@@ -49,12 +49,13 @@
         }
 
         .search-input {
-            width: 100%;
+            width: calc(100% - 20px); /* Dopasowanie do szerokości ramki */
             padding: 8px;
             font-size: 16px;
             border: 1px solid #ccc;
             border-radius: 5px;
             outline: none;
+            margin: 0;
         }
 
         .suggestions {
@@ -173,7 +174,7 @@
                     const properties = layer.feature?.properties || {};
                     let name = properties.name || "Brak nazwy";
                     const type = {
-                        kemping: properties.Yes_Kempingi || false,
+                        camping: properties.Yes_Kempingi || false,
                         tents: properties.Yes_Pola_Namiotowe || false,
                         attractions: properties.Yes_Atrakcje || false,
                         parking: properties.Yes_Parkingi || false,
@@ -223,6 +224,27 @@
         // Rozwijane filtry
         filterIcon.addEventListener("click", function () {
             filterOptions.style.display = filterOptions.style.display === "block" ? "none" : "block";
+        });
+
+        // Obsługa wyboru filtrów
+        const filterCheckboxes = document.querySelectorAll("#filter-options input[type='checkbox']");
+        filterCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener("change", function () {
+                const selectedFilters = Array.from(filterCheckboxes)
+                    .filter(checkbox => checkbox.checked)
+                    .map(checkbox => checkbox.id.replace("filter-", ""));
+
+                markerCluster.clearLayers();
+
+                allMarkers.forEach(({ marker, type }) => {
+                    if (
+                        selectedFilters.length === 0 ||
+                        selectedFilters.some(filter => type[filter])
+                    ) {
+                        markerCluster.addLayer(marker);
+                    }
+                });
+            });
         });
     </script>
 </body>
