@@ -9,9 +9,93 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.Default.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
-    <script type="module">
-        import { processKML } from './dataProcessor.js';
+    <style>
+        #map {
+            width: 100%;
+            height: 600px;
+        }
 
+        /* Styl popupu */
+        .custom-popup {
+            border: 2px solid #15830d;
+            padding: 10px;
+            font-family: 'Arial', sans-serif;
+        }
+        .custom-popup strong {
+            font-size: 18px;
+            color: #15830d;
+        }
+        .custom-popup a {
+            color: #0066cc;
+            text-decoration: underline;
+        }
+        .custom-popup a:hover {
+            color: #003399;
+        }
+
+        /* Styl filtrów */
+        .filter-box {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 1000;
+        }
+
+        .filter-icon {
+            width: 40px;
+            height: 40px;
+            background: #15830d;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 20px;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .filter-options {
+            display: none;
+            position: absolute;
+            top: 50px;
+            right: 0;
+            background: white;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 10px;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .filter-options label {
+            display: block;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+
+    <!-- Filtry -->
+    <div class="filter-box">
+        <div id="filter-icon" class="filter-icon">⚙</div>
+        <div id="filter-options" class="filter-options">
+            <label for="filter-camping">
+                <input type="checkbox" id="filter-camping" name="filter-camping"> Kempingi
+            </label>
+            <label for="filter-tents">
+                <input type="checkbox" id="filter-tents" name="filter-tents"> Pola namiotowe
+            </label>
+            <label for="filter-attractions">
+                <input type="checkbox" id="filter-attractions" name="filter-attractions"> Atrakcje
+            </label>
+            <label for="filter-parking">
+                <input type="checkbox" id="filter-parking" name="filter-parking"> Parkingi
+            </label>
+        </div>
+    </div>
+
+    <script>
         const map = L.map('map', { preferCanvas: true }).setView([52.237049, 21.017532], 6);
 
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -21,37 +105,11 @@
         const markerCluster = L.markerClusterGroup();
         map.addLayer(markerCluster);
 
-        const kmlUrl = "https://raw.githubusercontent.com/MarcinCampteam/lista-kempingow/refs/heads/main/map.kml";
-
-        // Wczytanie i podział danych
-        processKML(kmlUrl).then(categories => {
-            console.log("Kategorie:", categories); // Debug - sprawdzamy dane w konsoli
-
-            // Dodajemy wszystkie punkty do markerCluster
-            Object.values(categories).flat().forEach(location => {
-                const marker = L.marker(location.latLng).bindPopup(`
-                    <div class="custom-popup">
-                        <strong>${location.name}</strong><br>
-                        ${location.description}
-                    </div>
-                `);
-                markerCluster.addLayer(marker);
-            });
-
-            // Dopasowanie widoku mapy do wszystkich punktów
-            map.fitBounds(markerCluster.getBounds());
-        }).catch(error => {
-            console.error(error);
+        // Przykład: Dodanie obsługi rozwijania filtrów
+        document.getElementById("filter-icon").addEventListener("click", function () {
+            const filterOptions = document.getElementById("filter-options");
+            filterOptions.style.display = filterOptions.style.display === "block" ? "none" : "block";
         });
     </script>
-    <style>
-        #map {
-            width: 100%;
-            height: 600px;
-        }
-    </style>
-</head>
-<body>
-    <div id="map"></div>
 </body>
 </html>
