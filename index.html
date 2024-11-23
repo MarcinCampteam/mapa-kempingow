@@ -16,26 +16,53 @@
             height: 600px;
         }
 
+        #search-container {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 1000;
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+        }
+
+        #search-box {
+            width: 200px;
+            padding: 5px;
+        }
+
+        #search-button {
+            padding: 5px 10px;
+        }
+
         /* Styl popupu */
         .custom-popup {
-            border: 2px solid #15830d; /* Zielona ramka */
+            border: 2px solid #15830d;
             padding: 10px;
             font-family: 'Arial', sans-serif;
         }
+
         .custom-popup strong {
-            font-size: 18px; /* Większa nazwa miejsca */
-            color: #15830d; /* Zielony kolor nazwy */
+            font-size: 18px;
+            color: #15830d;
         }
+
         .custom-popup a {
-            color: #0066cc; /* Niebieskie linki */
+            color: #0066cc;
             text-decoration: underline;
         }
+
         .custom-popup a:hover {
-            color: #003399; /* Ciemniejszy niebieski przy najechaniu */
+            color: #003399;
         }
     </style>
 </head>
 <body>
+    <div id="search-container">
+        <input type="text" id="search-box" placeholder="Wpisz nazwę miejsca...">
+        <button id="search-button">Szukaj</button>
+    </div>
     <div id="map"></div>
 
     <script>
@@ -50,6 +77,9 @@
         // Dodanie grupowania markerów
         const markerCluster = L.markerClusterGroup();
         map.addLayer(markerCluster);
+
+        // Tablica markerów dla wyszukiwania
+        const markers = [];
 
         // Link do pliku KML
         const kmlUrl = "https://raw.githubusercontent.com/MarcinCampteam/lista-kempingow/refs/heads/main/map.kml";
@@ -96,10 +126,11 @@
                         </div>
                     `;
 
-                    // Dodanie do grupy klastrów
+                    // Dodanie markera do grupy i tablicy
                     const marker = L.marker(layer.getLatLng());
                     marker.bindPopup(popupContent);
                     markerCluster.addLayer(marker);
+                    markers.push({ marker, name: name.toLowerCase() });
                 });
 
                 // Dopasowanie widoku do punktów
@@ -108,6 +139,24 @@
             .on('error', function (e) {
                 console.error('Błąd ładowania pliku KML:', e.error);
             });
+
+        // Obsługa wyszukiwania
+        const searchBox = document.getElementById('search-box');
+        const searchButton = document.getElementById('search-button');
+
+        searchButton.addEventListener('click', () => {
+            const query = searchBox.value.toLowerCase().trim();
+            if (!query) return;
+
+            // Wyszukiwanie markera
+            const result = markers.find(item => item.name.includes(query));
+            if (result) {
+                map.setView(result.marker.getLatLng(), 14); // Przybliżenie do markera
+                result.marker.openPopup(); // Otwórz popup
+            } else {
+                alert('Nie znaleziono miejsca o podanej nazwie.');
+            }
+        });
     </script>
 </body>
 </html>
