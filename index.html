@@ -65,7 +65,6 @@
             background: #d4edda;
         }
 
-        /* Styl popupu */
         .custom-popup {
             border: 2px solid #15830d;
             padding: 10px;
@@ -114,94 +113,84 @@
     <div id="map"></div>
 
     <script>
-        // Inicjalizacja mapy z preferCanvas dla lepszej wydajności
         const map = L.map('map', { preferCanvas: true }).setView([52.237049, 21.017532], 6);
 
-        // Dodanie warstwy OpenStreetMap
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(map);
 
-        // Dodanie grupowania markerów
         const markerCluster = L.markerClusterGroup();
         map.addLayer(markerCluster);
 
-        // Tablica markerów dla wyszukiwania
         const markers = [];
 
-        // Funkcja usuwania polskich znaków
-        function removeAccents(str) {
-            return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-        }
-
-        // Link do pliku KML
         const kmlUrl = "https://raw.githubusercontent.com/MarcinCampteam/lista-kempingow/refs/heads/main/map.kml";
+        const linksJsonUrl = "https://raw.githubusercontent.com/MarcinCampteam/map-links/refs/heads/main/links.json";
 
-        // Funkcja do tworzenia linku do Google Maps
-        function generateGoogleMapsLink(lat, lng) {
-            return `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+        let linksData = {};
+
+        async function fetchLinks() {
+            try {
+                const response = await fetch(linksJsonUrl);
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                linksData = await response.json();
+            } catch (error) {
+                console.error("Błąd podczas pobierania JSON:", error);
+            }
         }
 
-        // Funkcja do formatowania popupu
-        function createPopupContent(name, phone, website, lat, lng) {
+        function createPopupContent(name, lat, lng) {
             let content = `<strong>${name}</strong>`;
-            if (phone) content += `<a href="tel:${phone}">📞 ${phone}</a>`;
-            if (website) content += `<a href="${website}" target="_blank">🌐 Strona WWW</a>`;
+            if (linksData[name]) {
+                content += `<a href="${linksData[name]}" target="_blank" style="color: blue; text-decoration: underline;">Zobacz szczegóły</a>`;
+            }
             content += `
-                <button onclick="window.open('${generateGoogleMapsLink(lat, lng)}', '_blank')">Wyznacz trasę</button>
-                <button onclick="window.open('https://www.campteam.pl/dodaj', '_blank')">Aktualizuj dane</button>
-            `;
+                <button onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}', '_blank')">Wyznacz trasę</button>
+                <button onclick="window.open('https://www.campteam.pl/dodaj', '_blank')">Aktualizuj dane</button>`;
             return content;
         }
 
-        // Wczytanie pliku KML i obsługa markerów
         omnivore.kml(kmlUrl)
-            .on('ready', function () {
+            .on('ready', async function () {
+                await fetchLinks();
                 this.eachLayer(function (layer) {
                     const properties = layer.feature?.properties || {};
                     const name = properties.name || "Brak nazwy";
-                    const phone = properties.phone || null;
-                    const website = properties.website || null;
                     const lat = layer.getLatLng().lat;
                     const lng = layer.getLatLng().lng;
 
-                    // Tworzenie popupu
-                    const popupContent = createPopupContent(name, phone, website, lat, lng);
+                    const popupContent = createPopupContent(name, lat, lng);
 
-                    // Dodanie markera do grupy i tablicy
                     const marker = L.marker(layer.getLatLng());
                     marker.bindPopup(popupContent);
                     markerCluster.addLayer(marker);
                     markers.push({ marker, name });
                 });
 
-                // Dopasowanie widoku do punktów
                 map.fitBounds(markerCluster.getBounds());
             })
             .on('error', function (e) {
-                console.error('Błąd ładowania pliku KML:', e.error);
+                console.error('Błąd ładowania KML:', e.error);
             });
 
-        // Obsługa wyszukiwania
         const searchBox = document.getElementById('search-box');
         const suggestions = document.getElementById('suggestions');
 
         searchBox.addEventListener('input', () => {
-            const query = removeAccents(searchBox.value.toLowerCase().trim());
-            suggestions.innerHTML = ''; // Wyczyść poprzednie sugestie
+            const query = searchBox.value.toLowerCase().trim();
+            suggestions.innerHTML = '';
 
             if (query) {
-                // Filtruj miejsca pasujące do wpisanej frazy (bez uwzględniania polskich znaków)
                 const matches = markers.filter(item =>
-                    removeAccents(item.name.toLowerCase()).includes(query)
+                    item.name.toLowerCase().includes(query)
                 );
                 matches.forEach(match => {
                     const suggestion = document.createElement('div');
                     suggestion.textContent = match.name;
                     suggestion.addEventListener('click', () => {
-                        map.setView(match.marker.getLatLng(), 14); // Przybliżenie do markera
-                        match.marker.openPopup(); // Otwórz popup
-                        suggestions.innerHTML = ''; // Wyczyść sugestie
+                        map.setView(match.marker.getLatLng(), 14);
+                        match.marker.openPopup();
+                        suggestions.innerHTML = '';
                     });
                     suggestions.appendChild(suggestion);
                 });
